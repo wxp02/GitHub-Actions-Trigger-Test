@@ -13,7 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug event
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Comment body: ${{ github.event.comment.body || 'N/A' }}"
+
       - name: Get PR Data
+        if: github.event.issue.pull_request != null
         id: pr_data
         uses: octokit/request-action@v2.1.0
         with:
@@ -22,13 +28,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout PR branch
+        if: github.event.issue.pull_request != null
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ fromJson(steps.pr_data.outputs.data).head.repo.full_name }}
           ref: ${{ fromJson(steps.pr_data.outputs.data).head.ref }}
 
+      # Checkout for pull_request events
+      - name: Checkout PR branch (pull_request)
+        if: github.event.pull_request != null
+        uses: actions/checkout@v3
+
       - name: Run script
         run: |
-          echo "Comment: ${{ github.event.comment.body }}"
+          echo "Comment: ${{ github.event.comment.body || 'N/A' }}"
           python scripts/on_pr_comment.py

@@ -1,0 +1,27 @@
+name: PR Comment Trigger
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  issue_comment:
+    types: [created]
+
+jobs:
+  run-on-pr-comment:
+    if: ${{ github.event.issue.pull_request }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Run script on PR comment
+        run: |
+          echo "Comment body:"
+          echo "${{ github.event.comment.body }}"
+          python scripts/on_pr_comment.py
